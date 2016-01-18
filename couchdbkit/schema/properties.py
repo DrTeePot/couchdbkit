@@ -64,7 +64,7 @@ class Property(object):
     creation_counter = 0
 
     def __init__(self, verbose_name=None, name=None,
-            default=None, required=False, validators=None,
+            default=None, required=False, validators=[],
             choices=None):
         """ Default constructor for a property.
 
