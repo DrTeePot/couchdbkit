@@ -14,6 +14,8 @@ convert_property, MAP_TYPES_PROPERTIES, ALLOWED_PROPERTY_TYPES, \
 LazyDict, LazyList
 from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
 ReservedWordError
+from django.db.models.signals import pre_save, post_save, pre_delete, post_delete, \
+pre_init, post_init
 
 
 __all__ = ['ReservedWordError', 'ALLOWED_PROPERTY_TYPES', 'DocumentSchema',
@@ -427,6 +429,9 @@ class DocumentBase(DocumentSchema):
 
         @params db: couchdbkit.core.Database instance
         """
+        # Signal that the save is starting
+        pre_save.send(sender=self.__class__, instance=self, raw=False, using=None,
+                      update_fields=None)
         self.validate()
         db = self.get_db()
 
@@ -436,6 +441,10 @@ class DocumentBase(DocumentSchema):
             self._doc.update(doc)
         elif '_id' in doc:
             self._doc.update({'_id': doc['_id']})
+
+        # Signal that the save is complete
+        post_save.send(sender=self.__class__, instance=self, created=True,
+                       update_fields=None, raw=False, using=None)
 
     store = save
 
