@@ -210,6 +210,8 @@ class FSDoc(object):
                         if name.endswith('/'):
                             name = name[:-1]
                         dmanifest[name] = i
+                    if fname.endswith("py"):
+                        self._doc['language'] = "python"
 
                 for vname, value in self._doc['views'].iteritems():
                     if value and isinstance(value, dict):
