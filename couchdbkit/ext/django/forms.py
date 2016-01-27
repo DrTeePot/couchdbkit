@@ -78,10 +78,11 @@ More fields types will be supported soon.
 """
 import collections
 
+import six
 from django.utils.text import capfirst
 from django.forms.utils import ErrorList
 from django.forms.forms import BaseForm
-from django.forms import fields as f
+from django.forms import fields as f, Field
 from django.forms.widgets import media_property
 
 FIELDS_PROPERTES_MAPPING = {
@@ -174,12 +175,6 @@ def get_declared_fields(bases, attrs, with_base_fields=True):
     used. The distinction is useful in ModelForm subclassing.
     Also integrates any additional media definitions.
     """
-
-    warnings.warn(
-            "get_declared_fields is deprecated and will be removed in Django 1.9.",
-            RemovedInDjango19Warning,
-            stacklevel=2,
-    )
 
     fields = [
         (field_name, attrs.pop(field_name))
