@@ -96,4 +96,4 @@ def syncdb(app, created_models, verbosity=2, **kwargs):
     from couchdbkit.ext.django.loading import couchdbkit_handler
     couchdbkit_handler.sync(app, verbosity=verbosity)
 
-signals.post_syncdb.connect(syncdb)
+signals.post_migrate.connect(syncdb)

@@ -76,12 +76,11 @@ Each document property has a corresponding default form field:
 
 More fields types will be supported soon.
 """
-
+import collections
 
 from django.utils.text import capfirst
-from django.utils.datastructures import SortedDict
-from django.forms.util import ErrorList
-from django.forms.forms import BaseForm, get_declared_fields
+from django.forms.utils import ErrorList
+from django.forms.forms import BaseForm
 from django.forms import fields as f
 from django.forms.widgets import media_property
 
@@ -120,7 +119,7 @@ def document_to_dict(instance, properties=None, exclude=None):
 
 def fields_for_document(document, properties=None, exclude=None):
     """
-    Returns a ``SortedDict`` containing form fields for the given document.
+    Returns a ``OrderedDict`` containing form fields for the given document.
 
     ``properties`` is an optional list of properties names. If provided, 
     only the named properties will be included in the returned properties.
@@ -162,7 +161,45 @@ def fields_for_document(document, properties=None, exclude=None):
                 
             field_list.append((prop.name, 
                 FIELDS_PROPERTES_MAPPING[property_class_name](**defaults)))
-    return SortedDict(field_list)
+    return collections.OrderedDict(field_list)
+
+def get_declared_fields(bases, attrs, with_base_fields=True):
+    """
+    Create a list of form field instances from the passed in 'attrs', plus any
+    similar fields on the base classes (in 'bases'). This is used by both the
+    Form and ModelForm metaclasses.
+
+    If 'with_base_fields' is True, all fields from the bases are used.
+    Otherwise, only fields in the 'declared_fields' attribute on the bases are
+    used. The distinction is useful in ModelForm subclassing.
+    Also integrates any additional media definitions.
+    """
+
+    warnings.warn(
+            "get_declared_fields is deprecated and will be removed in Django 1.9.",
+            RemovedInDjango19Warning,
+            stacklevel=2,
+    )
+
+    fields = [
+        (field_name, attrs.pop(field_name))
+        for field_name, obj in list(six.iteritems(attrs)) if isinstance(obj, Field)
+        ]
+    fields.sort(key=lambda x: x[1].creation_counter)
+
+    # If this class is subclassing another Form, add that Form's fields.
+    # Note that we loop over the bases in *reverse*. This is necessary in
+    # order to preserve the correct order of fields.
+    if with_base_fields:
+        for base in bases[::-1]:
+            if hasattr(base, 'base_fields'):
+                fields = list(six.iteritems(base.base_fields)) + fields
+    else:
+        for base in bases[::-1]:
+            if hasattr(base, 'declared_fields'):
+                fields = list(six.iteritems(base.declared_fields)) + fields
+
+    return collections.OrderedDict(fields)
 
 class DocumentFormOptions(object):
     def __init__(self, options=None):
